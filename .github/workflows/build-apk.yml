@@ -3,6 +3,9 @@ name: Build ZXCoin APK
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,12 +28,9 @@ jobs:
       - name: Extract Android project
         run: |
           unzip -q ZXCoin_Android_WebView_Project.zip -d extracted
-          echo "Extracted files:"
-          find extracted -maxdepth 3 -type f | head -100
 
-      - name: Find project folder
-        run: |
           PROJECT_DIR=$(find extracted -name settings.gradle -o -name settings.gradle.kts | head -1 | xargs dirname)
+
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
           echo "Android project: $PROJECT_DIR"
 
@@ -59,15 +59,27 @@ jobs:
           )
 
           manifest.write_text(text)
-          print("ZX COIN launcher icon applied successfully.")
+          print("ZX COIN launcher icon applied.")
           PY
 
-      - name: Build Debug APK
+      - name: Build APK
         run: |
           gradle -p "$PROJECT_DIR" assembleDebug --no-daemon
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Prepare APK
+        run: |
+          mkdir -p release
+          cp "$PROJECT_DIR/app/build/outputs/apk/debug/app-debug.apk" \
+             release/ZXCoin.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: ZXCoin-debug-APK
-          path: '**/build/outputs/apk/debug/*.apk'
+          tag_name: zxcoin-latest
+          name: ZX COIN Latest APK
+          body: |
+            ZX COIN latest Android APK.
+          files: release/ZXCoin.apk
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
