@@ -34,6 +34,13 @@ jobs:
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
           echo "Android project: $PROJECT_DIR"
 
+      - name: Set ZX COIN launcher icon
+        run: |
+          mkdir -p "$PROJECT_DIR/app/src/main/res/drawable"
+          cp "$GITHUB_WORKSPACE/file_00000000e9f08210b7e1975169f155a5.png" "$PROJECT_DIR/app/src/main/res/drawable/ic_launcher.png"
+          sed -i 's#android:icon="@[^"]*"#android:icon="@drawable/ic_launcher"#' "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
+          sed -i 's#android:roundIcon="@[^"]*"#android:roundIcon="@drawable/ic_launcher"#' "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
+
       - name: Build Debug APK
         run: |
           gradle -p "$PROJECT_DIR" assembleDebug --no-daemon
