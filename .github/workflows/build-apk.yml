@@ -37,9 +37,30 @@ jobs:
       - name: Set ZX COIN launcher icon
         run: |
           mkdir -p "$PROJECT_DIR/app/src/main/res/drawable"
-          cp "$GITHUB_WORKSPACE/file_00000000e9f08210b7e1975169f155a5.png" "$PROJECT_DIR/app/src/main/res/drawable/ic_launcher.png"
-          sed -i 's#android:icon="@[^"]*"#android:icon="@drawable/ic_launcher"#' "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
-          sed -i 's#android:roundIcon="@[^"]*"#android:roundIcon="@drawable/ic_launcher"#' "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
+
+          cp "$GITHUB_WORKSPACE/file_00000000e9f08210b7e1975169f155a5.png" \
+             "$PROJECT_DIR/app/src/main/res/drawable/ic_launcher.png"
+
+          python3 - "$PROJECT_DIR/app/src/main/AndroidManifest.xml" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          manifest = Path(sys.argv[1])
+          text = manifest.read_text()
+
+          text = re.sub(r'\sandroid:icon="[^"]*"', '', text)
+          text = re.sub(r'\sandroid:roundIcon="[^"]*"', '', text)
+
+          text = text.replace(
+              '<application',
+              '<application android:icon="@drawable/ic_launcher" android:roundIcon="@drawable/ic_launcher"',
+              1
+          )
+
+          manifest.write_text(text)
+          print("ZX COIN launcher icon applied successfully.")
+          PY
 
       - name: Build Debug APK
         run: |
